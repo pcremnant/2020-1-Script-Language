@@ -1,8 +1,10 @@
 from tkinter import *
 from tkinter import font
 
-from xmlManager import *
 from DataSet import *
+from xmlManager import *
+# from .data.xmlManager import *
+# from .data.DataSet import *
 
 
 def buttonActive(button, color='white'):
@@ -37,10 +39,10 @@ class MainGUI:
         self.frameInfo.place(x=400, y=100)
 
         self.xmlFileData = []
-        self.dataDom = []
+        self.strXml = []
 
-        for filename in XML_FILES:
-            self.dataDom.append(LoadXMLFromFile(filename))
+        for i in range(2):
+            self.strXml.append(loadOpenAPI(OPEN_API_CONN[i], OPEN_API_REQ[i]))
 
         self.currentSearchPage = 0
         self.maxSearchPage = 0
@@ -143,7 +145,7 @@ class MainGUI:
 
     def search(self, keyword=None):
         self.searchResult.clear()
-        searchResult = searchFromInquiry(self.dataDom[INQUIRY_LIST], self.SeriesCode, keyword)
+        searchResult = searchFromInquiry(self.strXml[INQUIRY_LIST], self.SeriesCode, keyword)
         self.resetSearchResultButton()
         if self.labelSearchResult is not None:
             self.labelSearchResult.destroy()
@@ -300,7 +302,7 @@ class MainGUI:
 
     def setInfoString(self, index):
         self.resetInfoPage()
-        searchInfo = searchQualificationInfo(self.dataDom[QUALIFICATION_INFO],
+        searchInfo = searchQualificationInfo(self.strXml[QUALIFICATION_INFO],
                                              self.buttonSearchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index][
                                                  'text'],
                                              DATA_TAG[QUALIFICATION_INFO])
