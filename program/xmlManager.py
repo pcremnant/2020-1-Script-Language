@@ -1,8 +1,7 @@
 # -*- coding: cp949 -*-
-from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
-import urllib
 import http.client
+
 
 def searchFromInquiry(strXml, seriesCode, keyword=None):
     searchResult = []
@@ -54,9 +53,9 @@ def checkDocument(dataDoc):
     return True
 
 
-def loadOpenAPI(connection, url):
-    conn = http.client.HTTPConnection(connection)
-    conn.request("GET", url)
+def loadOpenAPI(apiUrl, searchQuery):
+    conn = http.client.HTTPConnection(apiUrl)
+    conn.request("GET", searchQuery)
     req = conn.getresponse()
     print(req.status, req.reason)
     return req.read().decode('utf-8')

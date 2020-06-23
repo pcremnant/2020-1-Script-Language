@@ -1,57 +1,39 @@
-# -*- coding: cp949 -*-
-from xml.dom.minidom import parse, parseString
-from xml.etree import ElementTree
-import urllib
-import http.client
-from urllib.parse import urlparse
+from tkinter import *
+from xmlManager import *
 from DataSet import *
 
-
-def loadOpenAPI(connection, url):
-    conn = http.client.HTTPConnection(connection)
-    conn.request("GET", url)
-    req = conn.getresponse()
-    print(req.status, req.reason)
-    return req.read().decode('utf-8')
+key = 'serviceKey=' + get_data(PRIVATE_DATA_SERVICE_KEY)
+year = '&baseYY=' + str(2017)
+api_url = "openapi.q-net.or.kr"
+api_query = '/api/service/rest/InquiryExamQualPtcondSVC/getExamRecpList?' + key + year
 
 
-def LoadXMLFromOpenAPI(req):
-    try:
-        dom = parse(req)
-    except Exception:
-        print("Loading fail")
-    else:
-        print("Open API loading complete")
-        return dom
+# class MainGUI:
+#     def __init__(self):
+#         self.window = Tk()
+#         self.window.geometry("800x600")
+#         self.window.resizable(False, False)
+#         self.window.title('test')
 
 
-def searchQualificationInfo(strXml, jobName, tags):
+strXml = loadOpenAPI(api_url, api_query)
+
+
+def searchYear(strXml):
     infoList = {}
     try:
         tree = ElementTree.fromstring(strXml)
     except Exception:
         print("Element tree parsing error")
         return None
+    tmp = []
 
     elementIter = tree.iter('item')
     for eIter in elementIter:
-        strJobName = eIter.find('jmNm').text
-        if strJobName == jobName:
-            for tag in tags:
-                strData = eIter.find(tag)
-                infoList.update({tag: strData.text})
-            return infoList
-    return None
+        tmp.append(eIter.find('grdNm').text)
+    return tmp
 
-
-url = 'openapi.q-net.or.kr'
-serviceKey = 'serviceKey=aYfjcFBQW5DXnjHqWMmLyALqC77Mh1RoSNDEM3YrOTm%2FIZXGfUzAaEYpAm5dE2wG30rvybkoBPVt0wnQzIKZRA%3D%3D'
-query = '&'
-
-strXml = loadOpenAPI(url, '/api/service/rest/InquiryQualInfo/getList?' + serviceKey + '&seriesCd=01')
-print(strXml)
-
-search = searchQualificationInfo(strXml, '건축구조기술사', DATA_TAG[QUALIFICATION_INFO])
-
-for k, v in search.items():
-    print(k, ' : ', v)
+a = searchYear(strXml)
+for i in a:
+    if i is not None:
+        print(i)

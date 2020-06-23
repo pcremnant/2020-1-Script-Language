@@ -3,8 +3,9 @@ from tkinter import font
 
 from DataSet import *
 from xmlManager import *
-# from .data.xmlManager import *
-# from .data.DataSet import *
+from mailMark import *
+
+from fileMailMarked import *
 
 
 def buttonActive(button, color='white'):
@@ -25,7 +26,7 @@ class MainGUI:
         self.window.configure(bg='white')
         self.window.resizable(False, False)
 
-        self.fontSearchButton = font.Font(self.window, size=16, weight='bold', family='consolas')
+        self.fontSearchButton = font.Font(self.window, size=14, weight='bold', family='consolas')
         self.fontSearchResult = font.Font(self.window, size=12, weight='bold', family='consolas')
         self.fontInfo = font.Font(self.window, size=12, weight='bold', family='consolas')
 
@@ -38,22 +39,45 @@ class MainGUI:
         self.frameInfo = Frame(self.window, width=600, height=500, relief='flat', bg='blue')
         self.frameInfo.place(x=400, y=100)
 
-        self.xmlFileData = []
+        self.strXmlQualificationInfo = []
+
+        scd = ['01', '02', '03', '04']
+        for i in range(4):
+            self.strXmlQualificationInfo.append(0)
+            # strQuery = 'serviceKey=' + serviceKey + '&seriesCd=' + scd[i]
+            # self.strXmlQualificationInfo.append(loadOpenAPI(OPEN_API_URL[QUALIFICATION_INFO], OPEN_API_NAME[QUALIFICATION_INFO] + strQuery))
+
         self.strXml = []
 
-        for i in range(2):
-            self.strXml.append(loadOpenAPI(OPEN_API_CONN[i], OPEN_API_REQ[i]))
+        strQuery = 'serviceKey=' + serviceKey
+        self.strXml.append(loadOpenAPI(OPEN_API_URL[QUALIFICATION_LIST], OPEN_API_NAME[QUALIFICATION_LIST] + strQuery))
+        self.strXml.append(self.strXmlQualificationInfo[0])
 
         self.currentSearchPage = 0
         self.maxSearchPage = 0
-        self.SeriesCode = '01'
+        self.seriesCode = '01'
         self.searchResult = []
         self.qualificationInfo = []
         self.currentInfoPage = 0
         self.maxInfoPage = 0
 
+        self.strTestData = {}
+        for i in range(4):
+            self.strTestData.update({'0'+str(i+1): self.getTestData('0'+str(i + 1))})
+
+        # text
+        # 시리즈 코드 / 페이지 / 인덱스 x 자격명 / 텍스트
+        self.mailMarked = []
+        tmpMailMarked = loadMailMarked()
+        if tmpMailMarked is not None:
+            for mark in tmpMailMarked:
+                self.mailMarked.append(mark)
+
+        self.receiveMailAddr = ''
+
         # entry
         self.entrySearch = None
+        self.entryMailAddr = None
 
         # labels
         self.labelSearchResult = None
@@ -63,10 +87,13 @@ class MainGUI:
 
         # buttons
         self.buttonSearch = None
+        self.buttonSendMail = None
+        self.buttonShowMailMarked = None
         self.buttonSeriesSelect = []
         self.buttonSearchResult = []
         self.buttonSearchPage = []
         self.buttonInfoPage = []
+        self.buttonMailMark = []
 
         # set up
         self.setEntries()
@@ -77,12 +104,20 @@ class MainGUI:
         self.search(None)
 
         self.window.mainloop()
+        saveMailMarked(self.mailMarked)
 
     def setButtons(self):
         # search button
-        self.buttonSearch = (Button(self.frameSearch, font=self.fontSearchButton, text='검색', width=5, height=1,
-                                    command=self.pressedSearch))
-        self.buttonSearch.place(x=900, y=30)
+        self.buttonSearch = Button(self.frameSearch, font=self.fontSearchButton, text='검색', width=5, height=1,
+                                   command=self.pressedSearch)
+        self.buttonSearch.place(x=730, y=30)
+        self.buttonSendMail = Button(self.frameSearch, font=self.fontSearchButton, text='메일전송', width=8, height=1,
+                                     command=self.pressedSendMail)
+        self.buttonSendMail.place(x=800, y=30)
+
+        self.buttonShowMailMarked = Button(self.frameSearch, font=self.fontSearchButton, text='메일마크', width=8, height=1,
+                                           command=self.pressedShowMailMarked)
+        self.buttonShowMailMarked.place(x=900, y=30)
 
         # series selection button
         strSelectButton = ['기술사', '기능장', '기사', '기능사']
@@ -91,7 +126,7 @@ class MainGUI:
             self.buttonSeriesSelect.append(
                 Button(self.frameSearch, font=self.fontSearchButton, text=strSelectButton[i], width=5, height=1
                        , command=funcSelectButton[i]))
-            self.buttonSeriesSelect[i].place(x=40 + 100 * i, y=30)
+            self.buttonSeriesSelect[i].place(x=40 + 80 * i, y=30)
 
         # search result
         funcSearchResult = [self.pressedSearchResult1, self.pressedSearchResult2, self.pressedSearchResult3,
@@ -99,10 +134,19 @@ class MainGUI:
                             self.pressedSearchResult7, self.pressedSearchResult8, self.pressedSearchResult9,
                             self.pressedSearchResult10, self.pressedSearchResult11, self.pressedSearchResult12,
                             self.pressedSearchResult13, self.pressedSearchResult14, self.pressedSearchResult15]
+        funcMailMark = [self.pressedMailMark1, self.pressedMailMark2, self.pressedMailMark3, self.pressedMailMark4,
+                        self.pressedMailMark5, self.pressedMailMark6, self.pressedMailMark7, self.pressedMailMark8,
+                        self.pressedMailMark9, self.pressedMailMark10, self.pressedMailMark11, self.pressedMailMark12,
+                        self.pressedMailMark13, self.pressedMailMark14, self.pressedMailMark15]
+        p = PhotoImage(file='mailMark.png')
         for i in range(SEARCH_PAGE_SIZE):
             self.buttonSearchResult.append(Button(self.frameSearchResult, font=self.fontSearchResult, text='',
                                                   width=44, height=1, bd=0, command=funcSearchResult[i]))
             self.buttonSearchResult[i].place(x=0, y=15 + 29 * i)
+            button = Button(self.frameSearchResult, image=p, command=funcMailMark[i])
+            button.image = p
+            button.place(x=350, y=15 + 29 * i)
+            self.buttonMailMark.append(button)
 
         # info page button
         self.buttonInfoPage.append(
@@ -127,7 +171,7 @@ class MainGUI:
 
     def setEntries(self):
         self.entrySearch = Entry(self.frameSearch, font=self.fontSearchButton, width=30)
-        self.entrySearch.place(x=500, y=35)
+        self.entrySearch.place(x=410, y=35)
 
     def setLabels(self):
         for i in range(INFO_PAGE_SIZE):
@@ -145,8 +189,10 @@ class MainGUI:
 
     def search(self, keyword=None):
         self.searchResult.clear()
-        searchResult = searchFromInquiry(self.strXml[INQUIRY_LIST], self.SeriesCode, keyword)
+        searchResult = searchFromInquiry(self.strXml[QUALIFICATION_LIST], self.seriesCode, keyword)
         self.resetSearchResultButton()
+        self.maxSearchPage = 0
+        self.currentSearchPage = 0
         if self.labelSearchResult is not None:
             self.labelSearchResult.destroy()
         if searchResult is None:
@@ -160,6 +206,7 @@ class MainGUI:
         else:
             for result in searchResult:
                 self.searchResult.append(result)
+            self.maxSearchPage = len(self.searchResult) // SEARCH_PAGE_SIZE
             self.showSearchResult()
 
         self.setSearchResultButtonAction()
@@ -167,10 +214,15 @@ class MainGUI:
     def showSearchResult(self):
         for i in range(SEARCH_PAGE_SIZE):
             if self.currentSearchPage * SEARCH_PAGE_SIZE + i >= len(self.searchResult):
-                break
+                self.buttonSearchResult[i].configure(text='')
+                self.buttonSearchResult[i]['state'] = 'disabled'
             else:
                 self.buttonSearchResult[i].configure(
                     text=self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + i])
+                if self.buttonSearchResult[i]['state'] == 'disabled':
+                    self.buttonSearchResult[i]['state'] = 'active'
+        self.setMailMark()
+        self.setPageButton()
 
     def setSearchResultButtonAction(self):
         for button in self.buttonSearchResult:
@@ -187,12 +239,165 @@ class MainGUI:
     def setButtonAction(self):
         series = ['01', '02', '03', '04']
         for i in range(4):
-            if series[i] != self.SeriesCode:
+            if series[i] != self.seriesCode:
                 buttonActive(self.buttonSeriesSelect[i])
             else:
                 buttonDisabled(self.buttonSeriesSelect[i])
 
     # button command ------------------------------------------------
+    def pressedShowMailMarked(self):
+        self.mailMarkedWindow = Tk()
+        self.mailMarkedWindow.title('show mail marked')
+        self.mailMarkedWindow.geometry('300x600')
+        self.mailMarkedWindow.resizable(False, False)
+        self.mailMarkedWindow.configure(bg='white')
+
+        fontTitle = font.Font(self.mailMarkedWindow, size=14, weight='bold', family='consolas')
+        fontMark = font.Font(self.mailMarkedWindow, size=12, weight='bold', family='consolas')
+
+        Label(self.mailMarkedWindow, font=fontTitle, text='메일 전송 리스트', fg='black', bg='light gray', width=30).pack()
+
+        i = 0
+        for mark in self.mailMarked:
+            Label(self.mailMarkedWindow, font=fontMark, width=30, height=1, text=mark.name, fg='black', bg='white').pack() # .place(x=10, y=i*30 + 10)
+            i = i+1
+        self.mailMarkedWindow.mainloop()
+
+    def pressedSendMail(self):
+        self.sendWindow = Tk()
+        self.sendWindow.title('Send E-Mail')
+        self.sendWindow.geometry('300x110')
+        self.sendWindow.resizable(False, False)
+        fontTitle = font.Font(self.sendWindow, size=14, family='consolas')
+        fontButton = font.Font(self.sendWindow, size=14, weight='bold', family='consolas')
+
+        label = Label(self.sendWindow, font=fontTitle, width=25, height=1, text='메일 주소를 입력하세요')
+        label.pack() #place(x=10, y=5)
+
+        self.entryMailAddr = Entry(self.sendWindow, font=fontTitle, width=22)
+        self.entryMailAddr.pack() # place(x=25, y=40)
+        button = Button(self.sendWindow, font=fontButton, text='보내기', command=self.pressedSend)
+        button.pack(side='bottom') # place(x=110, y=70)
+        self.sendWindow.mainloop()
+
+    def pressedSend(self):
+        from email.mime.text import MIMEText
+        import smtplib
+        text = ''
+        for mark in self.mailMarked:
+            text += mark.text + '\n'
+        msg = MIMEText(text)
+        msg['Subject'] = 'Qualification Info'
+        msg['From'] = MAIL_SENDER
+        msg['To'] = str(self.entryMailAddr.get())
+
+        s = smtplib.SMTP(MAIL_HOST, MAIL_PORT)
+        s.ehlo()
+        s.starttls()
+        s.ehlo()
+        s.login(MAIL_SENDER, MAIL_PASSWORD)
+        s.sendmail(MAIL_SENDER, [str(self.entryMailAddr.get())], msg.as_string())
+        s.close()
+
+        self.sendWindow.destroy()
+
+    def getTestData(self, seriesCode):
+        strXml = loadOpenAPI(TEST_API_BASE_URL, TEST_API_URL[seriesCode] + TEST_API_QUERY)
+        text = ''
+        try:
+            tree = ElementTree.fromstring(strXml)
+        except Exception:
+            print('Etree error : Test data')
+            return None
+        elementIter = tree.iter('item')
+        for eIter in elementIter:
+            testName = eIter.find('description')
+            if testName is not None:
+                testName = testName.text
+            else:
+                return '시험정보 없음'
+
+            registerDocTestStart, registerDocTestEnd = eIter.find('docregstartdt'), eIter.find('docregenddt')
+            if registerDocTestStart is not None and registerDocTestEnd is not None:
+                registerDocTest = registerDocTestStart.text + ' ~ ' + registerDocTestEnd.text
+            else:
+                return testName + '\n시험 정보 없음'
+
+            docTest = eIter.find('docexamdt')
+            if docTest is not None:
+                docTest = docTest.text
+            else:
+                return testName + '\n시험 정보 없음'
+            text += testName + '\n필기시험 접수\n' + registerDocTest + '\n필기시험 일자\n' + docTest + '\n\n'
+
+        return text
+
+    def pressedMailMark(self, index):
+        isNotMarked = True
+        for mark in self.mailMarked:
+            if mark.isSameMark(self.seriesCode, self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index]):
+                p = PhotoImage(file='mailMark.PNG')
+                self.buttonMailMark[index]['image'] = p
+                self.buttonMailMark[index].image = p
+                isNotMarked = False
+                self.mailMarked.remove(mark)
+                break
+        if isNotMarked:
+            # text에 시험 정보들을 넣을 예정
+            text = self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index] + '\n\n' + self.strTestData[self.seriesCode]
+            # 여기에 넣는다..
+
+            self.mailMarked.append(
+                mailMark(self.seriesCode, self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index], text))
+            p = PhotoImage(file='mailMarked.PNG')
+            self.buttonMailMark[index]['image'] = p
+            self.buttonMailMark[index].image = p
+
+    def pressedMailMark1(self):
+        self.pressedMailMark(0)
+
+    def pressedMailMark2(self):
+        self.pressedMailMark(1)
+
+    def pressedMailMark3(self):
+        self.pressedMailMark(2)
+
+    def pressedMailMark4(self):
+        self.pressedMailMark(3)
+
+    def pressedMailMark5(self):
+        self.pressedMailMark(4)
+
+    def pressedMailMark6(self):
+        self.pressedMailMark(5)
+
+    def pressedMailMark7(self):
+        self.pressedMailMark(6)
+
+    def pressedMailMark8(self):
+        self.pressedMailMark(7)
+
+    def pressedMailMark9(self):
+        self.pressedMailMark(8)
+
+    def pressedMailMark10(self):
+        self.pressedMailMark(9)
+
+    def pressedMailMark11(self):
+        self.pressedMailMark(10)
+
+    def pressedMailMark12(self):
+        self.pressedMailMark(11)
+
+    def pressedMailMark13(self):
+        self.pressedMailMark(12)
+
+    def pressedMailMark14(self):
+        self.pressedMailMark(13)
+
+    def pressedMailMark15(self):
+        self.pressedMailMark(14)
+
     def pressedPrevInfoPage(self):
         if self.currentInfoPage <= 0:
             pass
@@ -222,22 +427,26 @@ class MainGUI:
         self.showSearchResult()
 
     def pressedSeries1(self):
-        self.SeriesCode = '01'
+        self.seriesCode = '01'
+        self.setStrXml()
         self.setButtonAction()
         self.search()
 
     def pressedSeries2(self):
-        self.SeriesCode = '02'
+        self.seriesCode = '02'
+        self.setStrXml()
         self.setButtonAction()
         self.search()
 
     def pressedSeries3(self):
-        self.SeriesCode = '03'
+        self.seriesCode = '03'
+        self.setStrXml()
         self.setButtonAction()
         self.search()
 
     def pressedSeries4(self):
-        self.SeriesCode = '04'
+        self.seriesCode = '04'
+        self.setStrXml()
         self.setButtonAction()
         self.search()
 
@@ -291,7 +500,36 @@ class MainGUI:
         self.resetInfoPage()
 
     # ---------------------------------------------------------------------
+    def setStrXml(self):
+        if self.seriesCode == '01':
+            self.strXml[QUALIFICATION_INFO] = self.strXmlQualificationInfo[0]
+        elif self.seriesCode == '02':
+            self.strXml[QUALIFICATION_INFO] = self.strXmlQualificationInfo[1]
+        elif self.seriesCode == '03':
+            self.strXml[QUALIFICATION_INFO] = self.strXmlQualificationInfo[2]
+        elif self.seriesCode == '04':
+            self.strXml[QUALIFICATION_INFO] = self.strXmlQualificationInfo[3]
+
+        # strQuery = 'serviceKey=' + serviceKey + '&seriesCd=' + self.seriesCode
+        # self.strXml.append(loadOpenAPI(OPEN_API_URL[QUALIFICATION_INFO], OPEN_API_NAME[QUALIFICATION_INFO] + strQuery))
+
+    def setMailMark(self):
+        # 서치 리저트 페이지 이동 시
+        # 시리즈 코드 변경 시
+        # 메일 마크를 최신화 할 것
+        for i in range(SEARCH_PAGE_SIZE):
+            p = PhotoImage(file='mailMark.PNG')
+            for mark in self.mailMarked:
+                if self.currentSearchPage * SEARCH_PAGE_SIZE + i >= len(self.searchResult):
+                    p = None
+                elif mark.isSameMark(self.seriesCode, self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + i]):
+                    p = PhotoImage(file='mailMarked.PNG')
+            self.buttonMailMark[i]['image'] = p
+            self.buttonMailMark[i].image = p
+
     def showInfo(self):
+        if len(self.qualificationInfo) < 1:
+            pass
         for i in range(INFO_PAGE_SIZE):
             if self.currentInfoPage * INFO_PAGE_SIZE + i >= len(self.qualificationInfo):
                 self.labelInfo[i]['text'] = ''
@@ -303,7 +541,7 @@ class MainGUI:
     def setInfoString(self, index):
         self.resetInfoPage()
         searchInfo = searchQualificationInfo(self.strXml[QUALIFICATION_INFO],
-                                             self.buttonSearchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index][
+                                             self.buttonSearchResult[index][
                                                  'text'],
                                              DATA_TAG[QUALIFICATION_INFO])
         if searchInfo is None:
