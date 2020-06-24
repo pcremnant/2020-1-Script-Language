@@ -3,9 +3,9 @@ from tkinter import font
 
 from DataSet import *
 from xmlManager import *
-from mailMark import *
 
 from fileMailMarked import *
+from GraphGUI import *
 
 
 def buttonActive(button, color='white'):
@@ -63,7 +63,7 @@ class MainGUI:
 
         self.strTestData = {}
         for i in range(4):
-            self.strTestData.update({'0'+str(i+1): self.getTestData('0'+str(i + 1))})
+            self.strTestData.update({'0' + str(i + 1): self.getTestData('0' + str(i + 1))})
 
         # text
         # 시리즈 코드 / 페이지 / 인덱스 x 자격명 / 텍스트
@@ -89,6 +89,7 @@ class MainGUI:
         self.buttonSearch = None
         self.buttonSendMail = None
         self.buttonShowMailMarked = None
+        self.buttonGraph = None
         self.buttonSeriesSelect = []
         self.buttonSearchResult = []
         self.buttonSearchPage = []
@@ -157,6 +158,11 @@ class MainGUI:
                    bd=1, command=self.pressedNextInfoPage))
         self.buttonInfoPage[PREV_PAGE].place(x=225, y=460)
         self.buttonInfoPage[NEXT_PAGE].place(x=325, y=460)
+        p = PhotoImage(file='graphButton.PNG')
+        button = Button(self.frameInfo, image=p, command=self.pressedGraph)
+        button.image = p
+        button.place(x=550, y=460)
+        self.buttonGraph = button
 
         # search page button
         self.buttonSearchPage.append(Button(self.frameSearchResult, font=self.fontSearchResult, text='이전', width=4,
@@ -245,6 +251,9 @@ class MainGUI:
                 buttonDisabled(self.buttonSeriesSelect[i])
 
     # button command ------------------------------------------------
+    def pressedGraph(self):
+        GraphGUI(self.mailMarked)
+
     def pressedShowMailMarked(self):
         self.mailMarkedWindow = Tk()
         self.mailMarkedWindow.title('show mail marked')
@@ -259,8 +268,9 @@ class MainGUI:
 
         i = 0
         for mark in self.mailMarked:
-            Label(self.mailMarkedWindow, font=fontMark, width=30, height=1, text=mark.name, fg='black', bg='white').pack() # .place(x=10, y=i*30 + 10)
-            i = i+1
+            Label(self.mailMarkedWindow, font=fontMark, width=30, height=1, text=mark.name, fg='black',
+                  bg='white').pack()  # .place(x=10, y=i*30 + 10)
+            i = i + 1
         self.mailMarkedWindow.mainloop()
 
     def pressedSendMail(self):
@@ -272,12 +282,12 @@ class MainGUI:
         fontButton = font.Font(self.sendWindow, size=14, weight='bold', family='consolas')
 
         label = Label(self.sendWindow, font=fontTitle, width=25, height=1, text='메일 주소를 입력하세요')
-        label.pack() #place(x=10, y=5)
+        label.pack()  # place(x=10, y=5)
 
         self.entryMailAddr = Entry(self.sendWindow, font=fontTitle, width=22)
-        self.entryMailAddr.pack() # place(x=25, y=40)
+        self.entryMailAddr.pack()  # place(x=25, y=40)
         button = Button(self.sendWindow, font=fontButton, text='보내기', command=self.pressedSend)
-        button.pack(side='bottom') # place(x=110, y=70)
+        button.pack(side='bottom')  # place(x=110, y=70)
         self.sendWindow.mainloop()
 
     def pressedSend(self):
@@ -344,7 +354,8 @@ class MainGUI:
                 break
         if isNotMarked:
             # text에 시험 정보들을 넣을 예정
-            text = self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index] + '\n\n' + self.strTestData[self.seriesCode]
+            text = self.searchResult[self.currentSearchPage * SEARCH_PAGE_SIZE + index] + '\n\n' + self.strTestData[
+                self.seriesCode]
             # 여기에 넣는다..
 
             self.mailMarked.append(

@@ -1,5 +1,4 @@
 from tkinter import *
-from fileMailMarked import *
 from tkinter import font
 
 
@@ -14,14 +13,6 @@ class point:
 
     def getRect(self):
         return self.x - self.width, self.y - self.height, self.x + self.width, self.y + self.height
-
-
-# mailMarked = []
-# tmpMailMarked = loadMailMarked()
-# if tmpMailMarked is not None:
-#     for mark in tmpMailMarked:
-#         mailMarked.append(mark)
-
 
 class GraphGUI:
     # global mailMarked
@@ -93,6 +84,3 @@ class GraphGUI:
                                     text=self.maxValue - i, font=self.fontValue)
         self.canvas.create_rectangle(0, 0, self.width, self.heightBorder)
         self.canvas.create_text(self.width//2, self.heightBorder//2, text='북마크 된 정보 그래프', font=self.fontName)
-
-
-# GraphGUI(mailMarked)
