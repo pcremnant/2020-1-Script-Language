@@ -43,9 +43,9 @@ class MainGUI:
 
         scd = ['01', '02', '03', '04']
         for i in range(4):
-            self.strXmlQualificationInfo.append(0)
-            # strQuery = 'serviceKey=' + serviceKey + '&seriesCd=' + scd[i]
-            # self.strXmlQualificationInfo.append(loadOpenAPI(OPEN_API_URL[QUALIFICATION_INFO], OPEN_API_NAME[QUALIFICATION_INFO] + strQuery))
+            strQuery = 'serviceKey=' + serviceKey + '&seriesCd=' + scd[i]
+            self.strXmlQualificationInfo.append(
+                loadOpenAPI(OPEN_API_URL[QUALIFICATION_INFO], OPEN_API_NAME[QUALIFICATION_INFO] + strQuery))
 
         self.strXml = []
 

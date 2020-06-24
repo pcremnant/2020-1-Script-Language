@@ -105,11 +105,6 @@ def handle(msg):
     # 종목 코드
 
 
-today = date.today()
-current_month = today.strftime('%Y%m')
-
-print('[', today, ']received token : ', token)
-
 bot = telepot.Bot(token)
 pprint(bot.getMe())
 bot.message_loop(handle)
@@ -118,9 +113,3 @@ print('Listening...')
 
 while 1:
     time.sleep(10)
-
-# bot.sendMessage('830384106', '텔레그램 봇 테스트 - 스크립트언어')
-
-
-# 나는 뭘 가져와야 하는가???
-# 1. 자격명 / 년도 -> 해당년도 시험 일정
