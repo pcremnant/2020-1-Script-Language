@@ -4,15 +4,15 @@ from pprint import pprint
 import traceback
 import sys
 import time
-
+from DataSet import *
 from xml.etree import ElementTree
 
 from datetime import date, datetime, timedelta
 
 MAX_MSG_LENGTH = 300
 
-key = 'aYfjcFBQW5DXnjHqWMmLyALqC77Mh1RoSNDEM3YrOTm%2FIZXGfUzAaEYpAm5dE2wG30rvybkoBPVt0wnQzIKZRA%3D%3D'
-token = '967252582:AAGv99nYSP2m-Ac-58ECPStzlagsvL-520k'
+key = get_data(PRIVATE_DATA_SERVICE_KEY)
+token = get_data(PRIVATE_DATA_TELEGRAM_TOKEN)
 
 baseUrl = "openapi.q-net.or.kr"
 apiName = {

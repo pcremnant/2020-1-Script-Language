@@ -1,8 +1,9 @@
-from get_data import get_data
+from get_data2 import get_data
 PRIVATE_DATA_GMAIL_ID = 0
 PRIVATE_DATA_GMAIL_PW = 1
 PRIVATE_DATA_GMAIL_PORT = 2
 PRIVATE_DATA_SERVICE_KEY = 3
+PRIVATE_DATA_TELEGRAM_TOKEN = 4
 
 
 apiUrl = 'openapi.q-net.or.kr'
